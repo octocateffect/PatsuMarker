@@ -1,17 +1,21 @@
 {
   "name": "Github Bookmarks",
   "version": "0.1",
-  "description": "Github bookmarks",
+  "description": "Github bookmarks system.",
   "permissions": [
-    "bookmarks",
     "tabs",
+    "storage",
     "https://api.github.com/*",
-    "https://github.com/*"
+    "https://github.com/*",
+    "http://chatea.github.io/githubbookmark/*"
   ],
   "browser_action": {
-      "default_title": "My Bookmarks",
+      "default_title": "Github Bookmarks",
       "default_icon": "icon.png",
       "default_popup": "popup.html"
+  },
+  "externally_connectable": {
+    "matches": ["http://chatea.github.io/githubbookmark/*"]
   },
   "manifest_version": 2,
   "content_security_policy": "script-src 'self' https://ajax.googleapis.com; object-src 'self'"
