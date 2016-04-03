@@ -1,13 +1,14 @@
-function requestAddRepo(account, repoUrl) {
+function requestAddRepo(accountId, repoUrl) {
   // TODO
-  document.getElementById("log").innerHTML = "Add: account:" + account + "repoUrl:" + repoUrl;
+  console.log("Add: accountId:" + accountId + ", repoUrl:" + repoUrl);
 }
 
-function requestRemoveRepo(account, repoUrl) {
+function requestRemoveRepo(accountId, repoUrl) {
   // TODO
-  document.getElementById("log").innerHTML = "Remove: account:" + account + "repoUrl:" + repoUrl;
+  console.log("Remove: accountId:" + accountId + ", repoUrl:" + repoUrl);
 }
 
-function requestListRepos(account) {
+function requestListRepos(accountId) {
   // TODO
+  console.log("List: accountId:" + accountId);
 }

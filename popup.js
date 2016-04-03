@@ -3,8 +3,6 @@ var LOGIN_PAGE = "http://chatea.github.io/githubbookmark/login.html";
 var CLIENT_ID = "69a3094c924ec03f2f3c";
 var CLIENT_SECRET = "1f61aebd0ae66a0be038fb872231745e239088c0";
 
-var TOKEN = "token";
-
 // callback should take one arguments.
 function getCurrentPageUrl(callback) {
   chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, callback);
@@ -20,19 +18,17 @@ function getParams(url, variable) {
   }
 }
 
-function getUser(token, callback) {
+function getUser(token, successCallback, failedCallback) {
   var userApi = "https://api.github.com/user?access_token=" + token;
   $.ajax({
     url: userApi,
-    headers: {
-      "Access-Control-Allow-Origin": "*"
-    },
     type: 'GET',
     success: function(data) {
-      callback(data);
+      successCallback(data);
     },
     error: function() {
-      message('Error: Cannot get user');
+      console.log('Error: Cannot get user');
+      failedCallback();
     }
   });
 }
@@ -48,43 +44,41 @@ function requestAccesstoken(code) {
     },
     type: 'POST',
     success: function(data) {
-      // var token = data["access_token"];
       var token = getParams(data, "access_token");
-
       saveToken(token);
-      // var userCallback = function(data) {
-      //   $('#user').text("User is " + data["login"]);
-      //   $('#id').text("User id is " + data["id"]);
-      // };
-
-      getUser(token, userCallback);
     },
     error: function() {
-      message('Error: Cannot get token');
+      console.log('Error: Cannot get token');
     }
   });
 }
 
 function saveToken(token) {
   if (!token) {
-    message("Error: There is no token");
+    console.log("Error: There is no token");
     return;
   }
 
-  chrome.storage.sync.set({TOKEN: token}, function() {
-    message('Token saved');
+  chrome.storage.sync.set({"token": token}, function() {
+    console.log('Token saved');
+    setLogginned(token);
   });
 }
 
 function getToken(callback) {
-  chrome.storage.sync.get(TOKEN, function(token) {
-    callback(token);
+  chrome.storage.sync.get("token", function(items) {
+    callback(items.token);
   });
+}
+
+function login() {
+  var url = "https://github.com/login/oauth/authorize?scope=user:email&redirect_uri=" + LOGIN_PAGE + "&client_id=" + CLIENT_ID;
+  chrome.tabs.create({url: url});
 }
 
 chrome.storage.onChanged.addListener(function(changes, namespace) {
   for (key in changes) {
-    if (key == TOKEN) {
+    if (key == "token") {
       var storageChange = changes[key];
       if (!storageChange.oldValue && storageChange.newValue) {
         showAsLogin();
@@ -102,93 +96,41 @@ chrome.runtime.onMessageExternal.addListener(
   }
 );
 
-// $(function() {
-//   $('#add').click(function() {
-//     $('#log').text("Pressed Add button");
-//     getCurrentPageUrl(function(tabs) {
-//       var url = tabs[0].url;
-//       requestAddRepo("charliet", url);
-//     });
-//   });
-// });
-
-// $(function() {
-//   $('#remove').click(function() {
-//     $('#log').text("Pressed Remove button");
-//     getCurrentPageUrl(function(tabs) {
-//       var url = tabs[0].url;
-//       requestRemoveRepo("charliet", url);
-//     });
-//   });
-// });
-
-function login() {
-  var url = "https://github.com/login/oauth/authorize?scope=user:email&redirect_uri=" + LOGIN_PAGE + "&client_id=" + CLIENT_ID;
-  chrome.tabs.create({url: url});
-  // $('#login').click(function() {
-  //
-  // });
+function setClickEvents(id) {
+  var url = window.location.href;
+  $('#add').click(function() {
+    requestAddRepo(id, url);
+  });
+  $('#remove').click(function() {
+    requestRemoveRepo(id, url);
+  });
 }
 
-var LoginButton = React.createClass({
-  render: function() {
-    return (
-      React.createElement('button', {type: "button", onClick: "login"},
-        "Login"
-      )
-    );
-  }
-});
-
-var AddButton = React.createClass({
-  render: function() {
-    return (
-      React.createElement('button', {type: "button", onClick: ""},
-        "Add To Bookmark"
-      )
-    );
-  }
-});
-
-var RemoveButton = React.createClass({
-  render: function() {
-    return (
-      React.createElement('button', {type: "button", onClick: ""},
-        "Remove From Bookmark"
-      )
-    );
-  }
-});
-
-var LoginnedPage = React.createClass({
-  render: function() {
-    return (
-      React.createElement(AddButton)
-      // TODO React.createElement(RemoveButton)
-    )
-  }
-});
-
-function showAsLoginned(token) {
-  ReactDOM.render(
-    React.createElement(LoginnedPage),
-    document.getElementById('content')
-  );
-}
-
-function showAsNotLoginned() {
-  ReactDOM.render(
-    React.createElement(LoginButton, null),
-    document.getElementById('content')
-  );
+function setLogginned(token) {
+  getUser(token, function(data) {
+    setClickEvents(data.id);
+  }, function() {
+    console.log("Cannot get user");
+  });
+  $('#loginned').css("visibility", "visible");
+  $('#non-loginned').css("visibility", "hidden");
 }
 
 $(function() {
-  getToken(function(token) {
+  $('#login').click(function() {
+    console.log("click login...");
+    login();
+  });
+});
+
+$(function() {
+  console.log("get token...");
+  getToken(function (token) {
     if (token) {
-      showAsLoginned(token);
+      setLogginned(token);
     } else {
-      showAsNotLoginned();
+      $('#loginned').css("visibility", "hidden");
+      $('#non-loginned').css("visibility", "visible");
     }
   });
 });
