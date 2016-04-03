@@ -96,13 +96,29 @@ chrome.runtime.onMessageExternal.addListener(
   }
 );
 
+function isGithubRepoUrl(url) {
+  var patt = new RegExp("^https://github.com/[a-zA-Z0-9._\-]+/[a-zA-Z0-9._\-]+$");
+  var res = patt.exec(url);
+  return res? true: false;
+}
+
 function setClickEvents(id) {
-  var url = window.location.href;
-  $('#add').click(function() {
-    requestAddRepo(id, url);
-  });
-  $('#remove').click(function() {
-    requestRemoveRepo(id, url);
+  chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
+    var url = tabs[0].url;
+    console.log("url: " + url);
+
+    // only show add/remove button on github page
+    if (isGithubRepoUrl(url)) {
+      $('#add').click(function() {
+        requestAddRepo(id, url);
+      });
+      $('#remove').click(function() {
+        requestRemoveRepo(id, url);
+      });
+    } else {
+      $('#add').css("visibility", "hidden");
+      $('#remove').css("visibility", "hidden");
+    }
   });
 }
 
@@ -115,6 +131,12 @@ function setLogginned(token) {
   $('#loginned').css("visibility", "visible");
   $('#non-loginned').css("visibility", "hidden");
 }
+
+$(function() {
+  $('#logo').click(function() {
+    openWebPage();
+  })
+})
 
 $(function() {
   $('#login').click(function() {
